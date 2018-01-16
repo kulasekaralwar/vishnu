@@ -1,0 +1,958 @@
+#SingleInstance, Force
+#NoEnv
+#NoTrayIcon
+
+Gui, +AlwaysOnTop +ToolWindow
+Gui, Add, Listview, x0008  y003 w0208 r15  vguiTasksList hwndLV2 Checked NoSortHdr,
+;Gui, Add, Listview, x0008  y003 w0208 r15  vguiTasksList hwndLV2 Checked NoSortHdr gTASKS_SINGLE,
+Gui, Show, w220 h312, Progress Window V1.0
+
+
+d1 := 320
+d2 := 640
+d3 := 960
+d4 := 1600
+
+LV_InsertCol(1, 0184, "Tasks")
+LV_InsertCol(2, 0000, "System")
+LV_InsertCol(3, 0000, "GoSub")
+LV_InsertCol(4, "0000 Integer", "#")
+
+LV_Add( "" , "Go to Fares"          		   , "Fares", "X_WHICH_TAB"                 , 1)
+LV_Add( "" , "Select Criteria Set"  		   , "Fares", "FARES_MODAL_CRITERIA_OPEN"   , 2)
+LV_Add( "" , "Search Zero Fares"    		   , "Fares", "FARES_MODAL_CRITERIA_PREP"   , 3)
+LV_Add( "" , "Select First Row"     		   , "Fares", "FARES_MODAL_CRITERIA_GRID"   , 4)
+LV_Add( "" , "Use Selected"         		   , "Fares", "FARES_MODAL_CRITERIA_USE"    , 5)
+LV_Add( "" , "Get Quantity"         		   , "Fares", "FARES_GET_CATS"              , 6)
+LV_Add( "" , "Calculate Date"       		   , "Fares", "FARES_GET_DATE"              , 7)
+LV_Add( "" , "Change all Dates"     		   , "Fares", "FARES_LOOP_SEQ"              , 8)
+LV_Add( "" , "Submit Inquiry (temp)"           , "Fares", "FARES_SUBMIT"                , 9)
+LV_Add( "" , "Check Submission Data"           , "Fares", "CHECK_SUBMIT"                , 10)
+LV_Add( "" , "Zero Filter"          		   , "Fares", "FARES_MODAL_STATUS_PREP"     , 11)
+LV_Add( "" , "Refresh Until Succesful"         , "Fares", "FARES_MODAL_SUBMIT_REFRESH"  , 12)
+LV_Add( "" , "Take Picture of List"            , "Fares", "FARES_MODAL_SUBMIT_IMAGE"    , 13)
+LV_Add( "" , "Close List"                      , "Fares", "FARES_MODAL_SUBMIT_CLOSE"    , 14)
+LV_Add( "" , "Exit Zero Fares"                 , "OS", 	  "GuiClose"                    , 15)
+
+topLeftCorner := A_ScreenWidth - 300
+Gui, 1:Show , x%topLeftCorner%
+
+gosub, TASKS_RUN
+return
+
+;~ TASKS_SINGLE:
+;~ {
+;~ if (A_GuiControl <> "guiTasksList")
+;~ return
+;~ if A_GuiEvent = DoubleClick
+;~ {
+;~ thisRow := LV_GetNext( 0 , "F" )
+;~ if not thisRow
+;~ return
+;~ LV_GetText(thisTask   , thisRow , 1 )
+;~ LV_GetText(thisSystem , thisRow , 2 )
+;~ LV_GetText(thisSub    , thisRow , 3 )
+;~ LV_Modify(thisRow , "Icon" . 5 )
+;~ gosub, % thisSub
+;~ LV_Modify(thisRow , "Icon" . 3 )
+;~ Sleep %d4%
+;~ ToolTip
+;~ }
+;~ return
+;~ }
+
+GuiClose:
+{
+	ExitApp
+	return
+}
+
+TASKS_RUN:
+{
+	sessionMode = %1%
+	sessionCarrier = %2%
+	whichDay = %3%
+	
+	;MsgBox, 4160 , %A_LineNumber% Info ... , %sessionMode%, 3.2
+	;MsgBox, 4160 , %A_LineNumber% Info ... , %sessionCarrier%, 3.2
+	;MsgBox, 4160 , %A_LineNumber% Info ... , %whichDay%, 3.2
+	
+	if(sessionMode = "auto1")
+	{
+	LV_Modify(1,"Check")
+	Sleep 1600
+	gosub FARES_MODAL_CRITERIA_OPEN
+	LV_Modify(2,"Check")
+	Sleep 1600	
+	gosub,FARES_MODAL_CRITERIA_PREP
+	LV_Modify(3,"Check")
+	Sleep 1600
+	gosub, FARES_MODAL_CRITERIA_USE
+	LV_Modify(4,"Check")
+	Sleep 1600
+	gosub FARES_GET_CATS
+	LV_Modify(5,"Check")
+	Sleep 1600
+	gosub FARES_GET_DATE
+	LV_Modify(6,"Check")
+	LV_Modify(7,"Check")
+	Sleep 1600
+	gosub FARES_LOOP_SEQ
+	LV_Modify(8,"Check")
+	Sleep 1600
+	gosub FARES_SUBMIT
+	LV_Modify(9,"Check")
+	Sleep 1600
+	gosub CHECK_SUBMIT
+	LV_Modify(10,"Check")
+	Sleep 1600
+	gosub FARES_MODAL_STATUS_PREP
+	LV_Modify(11,"Check")
+	Sleep 1600
+	gosub FARES_MODAL_SUBMIT_REFRESH
+	LV_Modify(12,"Check")
+	Sleep 1600
+	gosub FARES_MODAL_SUBMIT_IMAGE
+	LV_Modify(13,"Check")
+	gosub FARES_MODAL_SUBMIT_CLOSE
+	LV_Modify(14,"Check")
+	Sleep 1600
+	LV_Modify(15,"Check")
+	gosub GuiClose
+	}
+	return
+}
+
+
+FARES_MODAL_CRITERIA_OPEN:
+{
+Loop , 6
+{
+Send , {Esc}
+Sleep 0160
+}
+wb := WBGet()
+While wb.readyState != 4 || wb.document.readyState != "complete" || wb.busy
+Sleep , 0160
+try
+mFrame1     := wb.document.getElementById("workarea").contentWindow
+try
+mFrame2    := mFrame1.document.getElementById("tabPageBody_application_tabs_fares_ifrm").contentWindow
+try
+mFrame3  := mFrame2.document.getElementById("tabPageBody_tablist_nav0_ifrm").contentWindow
+offX           := 32
+offY           := 8
+win0           := wb.document.parentWindow
+win0X          := win0.screenLeft
+win0Y          := win0.screenTop
+frame1         := wb.document.getElementById("workarea").getBoundingClientRect()
+frame1X        := frame1.left  + win0X
+frame1Y        := frame1.top   + win0Y
+frame2         := mFrame1.document.getElementById("tabPageBody_application_tabs_fares_ifrm").getBoundingClientRect()
+frame2X        := frame2.left  + frame1X
+frame2Y        := frame2.top   + frame1Y
+frame3         := mFrame2.document.getElementById("tabPageBody_tablist_nav0_ifrm").getBoundingClientRect()
+frame3X        := frame3.left  + frame2X
+frame3Y        := frame3.top   + frame2Y
+menu0          := mFrame3.document.getElementById("loadCriteriaSet").getBoundingClientRect()
+menu0X         := menu0.left   + frame3X
+menu0Y         := menu0.top    + frame3Y
+menu0X2        := menu0.right  + frame3X
+menu0Y2        := menu0.bottom + frame3Y
+menu0XK        := menu0X       + offX
+menu0YK        := menu0Y       + offY
+variababbles=
+(Ltrim
+coords  `tx         `ty         `tx2        `ty2
+         
+win0    `t%win0x%   `t%win0Y%   `t
+         
+frame1  `t%frame1X% `t%frame1Y% `t
+frame2  `t%frame2X% `t%frame2Y% `t
+frame3  `t%frame3X% `t%frame3Y% `t
+         
+menu0   `t%menu0X%  `t%menu0Y%  `t%menu0X2% `t%menu0Y2%
+menu0K  `t%menu0XK% `t%menu0YK%
+         
+tRange  `t%tRangeX% `t%tRangeY% `t
+)
+tridentExists := false
+Loop , 16
+{
+ToolTip % "Attempt # " . A_Index
+Sleep , 960
+if WinExist("ahk_class Internet Explorer_TridentDlgFrame")
+{
+LogToFile("8. Going to Click Search criteria button")
+tridentExists := true
+break
+}
+MouseMove, menu0XK , menu0YK, 42
+Sleep , 320
+Click
+}
+ToolTip
+if !tridentExists
+{
+LogToFile(" Taking long to load")
+MsgBox , 4160 , %A_LineNumber% Info ... , Select Criteria Set`nwindow taking too long`n`nExiting Zero Fares , 4.8
+gosub , GuiClose
+return
+}
+return
+}
+
+FARES_MODAL_CRITERIA_PREP:
+{
+gosub, FARES_MODAL_INIT
+LogToFile("9. Got the Zero fare model")
+pModal.getElementByID("find").value:= "ZERO"
+Sleep 0640
+pModal.getElementByID("CriteriaSetLookupLoad_load_ownership" ).value:= "USER_ORG"
+Sleep 0640
+while(pModal.readystate != "complete" )
+Sleep 0160
+criFind:= pModal.getElementByID( "find" ).value
+criOwner:= pModal.getElementByID( "CriteriaSetLookupLoad_load_ownership" ).value
+criFromDate:= pModal.getElementByID( "fromDateTxtFld" ).value
+criToDate:= pModal.getElementByID( "toDateTxtFld" ).value
+variababbles=
+(
+Select Criteria Set
+criFind  `t`t%criFind%
+criOwner   `t%criOwner%
+criFromDate`t%criFromDate%
+criToDate  `t%criToDate%
+)
+pModal.getElementByID("search").click()
+LogToFile("10. Search button clicked")
+while (pModal.readystate != "complete")
+Sleep 0160
+return
+}
+
+FARES_MODAL_CRITERIA_USE:
+{
+gosub, FARES_MODAL_INIT
+pModal.getElementByID("useSelected").click()
+LogToFile("11. UseSelected Button Clicked")
+Sleep 0960
+return
+}
+
+FARES_GET_CATS:
+{
+wb:= WBGet()
+While wb.readyState != 4 || wb.document.readyState != "complete" || wb.busy
+Sleep, 100
+try
+iFrame1:= wb.document.getElementById("workarea").contentWindow
+try
+iFrame2:= iFrame1.document.getElementById("tabPageBody_application_tabs_fares_ifrm").contentWindow
+try
+iFrame3:= iFrame2.document.getElementById("tabPageBody_tablist_nav0_ifrm").contentWindow
+try
+gotDDL:= iFrame3.document.getElementById("goToQueryId").outerHTML
+StringReplace, gotDDL, gotDDL, </OPTION>, </OPTION>`n , All
+thisCatDDL=
+Loop, Parse, gotDDL, `n
+{
+if !A_LoopField
+break
+IfNotInString, A_LoopField, <OPTION
+continue
+FoundPos  := regexmatch( A_LoopField , "i)>\d*" , in_queueSeq )
+StringReplace , in_queueSeq , in_queueSeq , > ,  , All
+thisCatDDL   .= in_queueSeq . "`n"
+}
+StringTrimRight, thisCatDDL, thisCatDDL, 1
+queryQty:=0
+Loop, Parse, thisCatDDL, `n
+queryQty++
+;MsgBox, 4160 , %A_LineNumber% Info ... , There are [%queryQty%] Queries in this Set , 3.2
+LogToFile("12. Total Queries " queryQty)
+return
+}
+
+FARES_GET_DATE:
+{
+LogToFile("13. Start quering")
+wb := WBGet()
+While wb.readyState != 4 || wb.document.readyState != "complete" || wb.busy
+Sleep, 100
+try
+iFrame1 := wb.document.getElementById("workarea").contentWindow
+try
+iFrame2 := iFrame1.document.getElementById("tabPageBody_application_tabs_fares_ifrm").contentWindow
+try
+thisDate := iFrame2.document.getElementById("atpcalendar").innertext
+thisDay := SubStr( thisDate ,  1 , 2 )
+thisMonth := SubStr( thisDate ,  4 , 3 )
+thisYear := SubStr( thisDate , 10 , 2 )
+monthAbv = JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC
+Loop, Parse, monthAbv, |
+if(A_LoopField = thisMonth )
+thisMonthNumber := A_Index
+if(thisMonthNumber < 10)
+thisMonthNumber = 0%thisMonthNumber%
+thisDatePost   := "20" . thisYear . thisMonthNumber . thisDay . "000000"
+nextDate := thisDatePost
+if (whichDay = "next")
+nextDate += 1, Days
+FormatTime, thisDateFmt , %thisDatePost% , ddMMMyy
+FormatTime, nextDateFmt , %nextDate%, ddMMMyy
+LogToFile("13. Date Quering for " nextDateFmt)
+;MsgBox , 4160 , %A_LineNumber% Info ... , Now`t%thisDateFmt%`nUse`t%nextDateFmt% , 3.2
+return
+}
+
+
+FARES_LOOP_SEQ:
+{
+if !queryQty
+{
+MsgBox , 4160 , %A_LineNumber% Info ... , Please Count Queries before you run All , 3.2
+return
+}
+if !nextDateFmt
+{
+MsgBox , 4160 , %A_LineNumber% Info ... , Please GET date before you USE date , 3.2
+return
+}
+try
+iFrame1 := wb.document.getElementById("workarea").contentWindow
+try
+iFrame2 := iFrame1.document.getElementById("tabPageBody_application_tabs_fares_ifrm").contentWindow
+try
+iFrame3 := iFrame2.document.getElementById("tabPageBody_tablist_nav0_ifrm").contentWindow
+try
+iFrame3.document.getElementById("inc.effectiveDate").value := nextDateFmt
+LogToFile("14. Date filled for querying " nextDateFmt)
+Sleep 2400
+offX           := 8
+offY           := 8
+win0           := wb.document.parentWindow
+win0X          := win0.screenLeft
+win0Y          := win0.screenTop
+frame1         := wb.document.getElementById("workarea").getBoundingClientRect()
+frame1X        := frame1.left  + win0X
+frame1Y        := frame1.top   + win0Y
+frame2         := iFrame1.document.getElementById("tabPageBody_application_tabs_fares_ifrm").getBoundingClientRect()
+frame2X        := frame2.left  + frame1X
+frame2Y        := frame2.top   + frame1Y
+frame3         := iFrame2.document.getElementById("tabPageBody_tablist_nav0_ifrm").getBoundingClientRect()
+frame3X        := frame3.left  + frame2X
+frame3Y        := frame3.top   + frame2Y
+imgCollection  := iFrame3.document.getElementsByTagName("img")
+LogToFile("15. Start querying")
+Loop , % imgCollection.length
+{
+iIndex       := A_Index - 1
+subObj       := iFrame3.document.getElementsByTagName("img")[iIndex]
+} until ( subObj.title = "Next Page" )
+elem0          := subObj.getBoundingClientRect()
+elem0X         := elem0.left   + frame3X
+elem0Y         := elem0.top    + frame3Y
+elem0X2        := elem0.right  + frame3X
+elem0Y2        := elem0.bottom + frame3Y
+elem0XK        := elem0X       + offX
+elem0YK        := elem0Y       + offY
+variababbles=
+(Ltrim
+coords  `tx         `ty         `tx2        `ty2
+         
+win0    `t%win0x%   `t%win0Y%   `t
+         
+frame1  `t%frame1X% `t%frame1Y% `t
+frame2  `t%frame2X% `t%frame2Y% `t
+frame3  `t%frame3X% `t%frame3Y% `t
+         
+elem0   `t%elem0X%  `t%elem0Y%  `t%elem0X2% `t%elem0Y2%
+elem0K  `t%elem0XK% `t%elem0YK%
+         
+tRange  `t%tRangeX% `t%tRangeY% `t
+)
+remainingQueryQty := queryQty - 1
+Loop , %remainingQueryQty%
+{
+MouseMove , elem0XK , elem0YK , 42
+Sleep , 0960
+Click
+Sleep 4800
+try
+iFrame3.document.getElementById("inc.effectiveDate").value := nextDateFmt
+Sleep 2400
+}
+MouseMove , elem0XK , elem0YK , 42
+Sleep , 0960
+Click
+Sleep , 0960
+MouseMove , elem0XK , elem0YK , 42
+Sleep , 0960
+Click
+MsgBox , 4160 , %A_LineNumber% Info ... , All Query [%queryQty%] Dates set to [%nextDateFmt%] , 3.2
+LogToFile("16. Query's Date set to " nextDateFmt)
+return
+}
+
+
+FARES_SUBMIT:
+{
+Loop , 6
+{
+Send , {Esc}
+Sleep 0160
+}
+f_Click_Element_v2( "workarea" , "tabPageBody_application_tabs_fares_ifrm" , "tabPageBody_tablist_nav0_ifrm" , "" , "" , "viewResults" )
+return
+}
+
+f_Click_Element_v2( fFrame1 , fFrame2 , fFrame3 , fMethod , fType , fElement )
+{
+functionInputs=
+  (Ltrim
+  fFrame1 `t%fFrame1%
+  fFrame2 `t%fFrame2%
+  fFrame3 `t%fFrame3%
+  fMethod `t%fMethod%
+  fType   `t%fType%
+  fElement`t%fElement%
+)
+elem0=
+frame3=
+frame2=
+frame1=
+wb           := WBGet()
+offX         := 6
+offY         := 6
+win0         := wb.document.parentWindow
+win0X        := win0.screenLeft
+win0Y        := win0.screenTop
+frameDepth   := 0
+While wb.readyState != 4 || wb.document.readyState != "complete" || wb.busy
+Sleep , 0160
+if fFrame1
+try
+mFrame1  :=      wb.document.getElementById( fFrame1 ).contentWindow
+if fFrame2
+try
+mFrame2  :=      mFrame1.document.getElementById( fFrame2 ).contentWindow
+if fFrame3
+try
+mFrame3  :=      mFrame2.document.getElementById( fFrame3 ).contentWindow
+if fFrame1
+{
+frame1 := wb.document.getElementById( fFrame1 ).getBoundingClientRect()
+frame1X := frame1.left  + win0X
+frame1Y := frame1.top   + win0Y
+if (fMethod = "TagName")
+{
+collection_01 := mFrame1.document.getElementsByTagName( fType )
+Loop , % collection_01.length
+{
+iIndex := A_Index - 1
+subObj := collection_01[ iIndex ]
+if ( subObj.innertext == fElement )
+break
+}
+elem0 := subObj.getBoundingClientRect()
+}
+else
+{
+elem0 := mFrame1.document.getElementById( fElement ).getBoundingClientRect()
+}
+frameDepth := 1
+}
+if fFrame2
+{
+frame2 := mFrame1.document.getElementById( fFrame2 ).getBoundingClientRect()
+frame2X :=  frame2.left  + frame1X
+frame2Y :=  frame2.top   + frame1Y
+if (fMethod = "TagName")
+{
+collection_01 := mFrame2.document.getElementsByTagName( fType )
+Loop , % collection_01.length
+{
+iIndex := A_Index - 1
+subObj := collection_01[ iIndex ]
+if ( subObj.innertext == fElement )
+break
+}
+elem0 := subObj.getBoundingClientRect()
+}
+else
+{
+elem0 := mFrame2.document.getElementById( fElement ).getBoundingClientRect()
+}
+frameDepth := 2
+}
+if fFrame3
+{
+frame3  := mFrame2.document.getElementById( fFrame3 ).getBoundingClientRect()
+frame3X :=  frame3.left  + frame2X
+frame3Y :=  frame3.top   + frame2Y
+if (fMethod = "TagName")
+{
+collection_01 := mFrame3.document.getElementsByTagName( fType )
+Loop , % collection_01.length
+{
+iIndex := A_Index - 1
+subObj := collection_01[ iIndex ]
+if ( subObj.innertext == fElement )
+break
+}
+elem0 := subObj.getBoundingClientRect()
+}
+else
+{
+elem0 := mFrame3.document.getElementById( fElement ).getBoundingClientRect()
+}
+frameDepth := 3
+}
+IfInString , fElement , >
+{
+StringSplit , elemArray , fElement , >
+subCollection := mFrame%frameDepth%.document.getElementsByTagName(elemArray1)
+try
+{
+Loop , % subCollection.length
+{
+iIndex := A_Index - 1
+subObj := subCollection[ iIndex ]
+elem0  := subObj.getBoundingClientRect()
+if InStr( subObj.src , "controller_" )
+break
+}
+}
+}
+elem0X  := elem0.left   + frame%frameDepth%X
+elem0Y  := elem0.top    + frame%frameDepth%Y
+elem0X2 := elem0.right  + frame%frameDepth%X
+elem0Y2 := elem0.bottom + frame%frameDepth%Y
+elem0XK := elem0X       + offX
+elem0YK := elem0Y       + offY
+variababbles=
+  (Ltrim
+  coords     `tx         `ty         `tx2        `ty2
+
+  win0       `t%win0x%   `t%win0Y%   `t
+
+  frame1     `t%frame1X% `t%frame1Y% `t
+  frame2     `t%frame2X% `t%frame2Y% `t
+  frame3     `t%frame3X% `t%frame3Y% `t
+
+  elem0      `t%elem0X%  `t%elem0Y%  `t%elem0X2% `t%elem0Y2%
+  elem0K     `t%elem0XK% `t%elem0YK%
+
+  tRange     `t%tRangeX% `t%tRangeY% `t
+)
+if fFrame1
+{
+}
+if fFrame2
+{
+}
+if fFrame3
+{
+}
+if fElement
+{
+MouseMove, elem0XK, elem0YK, 42
+Sleep, 0640
+MouseClick
+}
+Sleep 3200
+return
+}
+
+CHECK_SUBMIT:
+{
+submitDataFound := true
+WinWaitActive, ahk_class Internet Explorer_TridentDlgFrame ,  , 6.4
+if ErrorLevel
+{
+wb := WBGet()
+While wb.readyState != 4 || wb.document.readyState != "complete" || wb.busy
+Sleep, 100
+try
+iFrame1 := wb.document.getElementById("workarea").contentWindow
+try
+iFrame2 := iFrame1.document.getElementById("tabPageBody_application_tabs_fares_ifrm").contentWindow
+try
+iFrame3 := iFrame2.document.getElementById("tabPageBody_tablist_nav0_ifrm").contentWindow
+try
+dataStat := iFrame3.document.getElementById("wsf_confirmBox").InnerText
+dataStat = %dataStat%
+if (dataStat = "No Matching Data Found")
+{
+MsgBox, 4160 , %A_LineNumber% Info , [%dataStat%]`nWill now open Queries directly`nto display Status Dashboard , 3.2
+gosub, QUERIES_MODAL_OPEN
+submitDataFound := false
+}
+}
+return
+}
+
+QUERIES_MODAL_OPEN:
+{
+f_Click_Element_v2( "workarea" , "dashBoardIframe" , "" , "" , "" , "IMG>controller_col" )
+f_Click_Element_v2( "workarea" , "dashBoardIframe" , "" , "" , "" , "faresQueriesLink" )
+return
+}
+
+FARES_MODAL_STATUS_PREP:
+{	
+gosub, FARES_MODAL_INIT
+iModal1.document.getElementByID("name").value := "ZERO"
+;MsgBox,4160, %A_LineNumber% Info ... , Find by Name, 3.2
+Sleep 0960
+;~ iModal1.document.getElementsByName("csName")[0].value := "ZERO"
+;~ Sleep 0640
+iModal1.document.getElementByID("show").click()
+while(pModal.readystate != "complete")
+Sleep 0160
+return
+}
+
+FARES_MODAL_SUBMIT_REFRESH:
+{
+gosub, FARES_MODAL_INIT
+subStatus=
+subSuccessful := false
+Loop
+{
+LogToFile("Refresh button click")
+iModal1.document.getElementByID("refresh").click()
+Sleep 3200
+subStatus := iModal1.document.getElementByID("submitInquiry").outerhtml
+if subStatus
+{
+IfInString, subStatus, disabled
+{
+subSuccessful := false
+TrayTip , Fares , Executing, , 17
+}
+else
+{
+subSuccessful := true
+TrayTip, Fares , Submission Successful ,  , 17
+}
+}
+Sleep 32000
+} until subSuccessful
+return
+}
+
+FARES_MODAL_SUBMIT_IMAGE:
+{
+FormatTime , zeroFaresFileStamp , %A_Now%    , yy-MM-dd-hh-mm
+GMT_WAS := A_NowUTC
+deltaHours             := 4
+EnvSub, GMT_WAS , %deltaHours% , hours
+FormatTime, zeroFaresFileStamp, %GMT_WAS% , yy-MM-dd-hh-mm
+FormatTime, NOW_WAS_FMT , %A_Now% , yy-MM-dd-hh-mm
+zfSubmittedFile := "img\zerofares\" . "ZF-" . sessionCarrier . "-" . zeroFaresFileStamp . ".png"
+gosub, FARES_MODAL_INIT
+TrayTip
+win0    := pModal.parentWindow
+win0X   := win0.screenLeft
+win0Y   := win0.screenTop
+frame1  := pModal.getElementById("frmPopup").getBoundingClientRect()
+frame1X := frame1.left  + win0X
+frame1Y := frame1.top   + win0Y
+grid   := iModal1.document.getElementByID("queryStatusList").getBoundingClientRect()
+gridX  := grid.left   + frame1X
+gridY  := grid.top    + frame1Y
+gridW  := grid.right  + frame1X - gridX
+gridH  := grid.bottom + frame1Y - gridY
+WinMinimize , Zero Fares
+If !pToken := Gdip_Startup()
+{
+LogToFile("Image Capture failed")
+MsgBox, 4160 , %A_LineNumber% Info ... , Grid image capture failed , 3.2
+return
+}
+pToken  := Gdip_Startup()
+pBitmap := Gdip_BitmapFromScreen( gridX "|" gridY "|" gridW "|" gridH )
+Gdip_SaveBitmapToFile(pBitmap, zfSubmittedFile, 100 )
+Gdip_Shutdown( pToken )
+while NOT FileExist( zfSubmittedFile )
+Sleep 0160
+TrayTip, Fares , Image Created , , 17
+WinRestore, Zero Fares
+WinActivate, ahk_class Internet Explorer_TridentDlgFrame
+Sleep 2400
+return
+}
+
+FARES_MODAL_SUBMIT_CLOSE:
+{
+iModal1.document.getElementByID("close").click()
+return
+}
+
+FARES_MODAL_INIT:
+{
+IfWinExist, ahk_class Internet Explorer_TridentDlgFrame
+{
+WinActivate, ahk_class Internet Explorer_TridentDlgFrame
+WinWaitActive, ahk_class Internet Explorer_TridentDlgFrame
+pModal:=Get_MODAL_DOCUMENT()
+while (pModal.readystate != "complete")
+Sleep 0160
+try
+iModal1:=pModal.getElementById("frmPopup").contentWindow
+catch e
+MsgBox, 4160, %A_LineNumber% Info ... , Modal submit initialization failed, 2.4
+}
+else
+MsgBox, 4160, %A_LineNumber%, Modal Window Not Present, 2.4
+while(pModal.readystate != "complete")
+Sleep 0160
+return
+}
+
+Get_MODAL_DOCUMENT()
+{
+static msg := DllCall("RegisterWindowMessage", "str", "WM_HTML_GETOBJECT")
+SendMessage msg, 0, 0, Internet Explorer_Server1, ahk_class Internet Explorer_TridentDlgFrame
+if ErrorLevel = FAIL
+return
+lResult := ErrorLevel
+DllCall("oleacc\ObjectFromLresult", "ptr", lResult
+, "ptr", GUID(IID_IHTMLDocument2,"{332C4425-26CB-11D0-B483-00C04FD90119}")
+, "ptr", 0, "ptr*", pdoc)
+static VT_DISPATCH := 9, F_OWNVALUE := 1
+return ComObject(VT_DISPATCH, pdoc, F_OWNVALUE)
+}
+
+GUID(ByRef GUID, sGUID)
+{
+VarSetCapacity(GUID, 16, 0)
+return DllCall("ole32\CLSIDFromString", "wstr", sGUID, "ptr", &GUID) >= 0 ? &GUID : ""
+}
+
+WBGet(WinTitle="ahk_class IEFrame", Svr#=1) { ; based on ComObjQuery docs
+   static   msg := DllCall("RegisterWindowMessage", "str", "WM_HTML_GETOBJECT")
+   ,   IID := "{0002DF05-0000-0000-C000-000000000046}" ; IID_IWebBrowserApp
+;   ,   IID := "{332C4427-26CB-11D0-B483-00C04FD90119}" ; IID_IHTMLWindow2
+   SendMessage msg, 0, 0, Internet Explorer_Server%Svr#%, %WinTitle%
+   if (ErrorLevel != "FAIL") {
+      lResult:=ErrorLevel, VarSetCapacity(GUID,16,0)
+      if DllCall("ole32\CLSIDFromString", "wstr","{332C4425-26CB-11D0-B483-00C04FD90119}", "ptr",&GUID) >= 0 {
+         DllCall("oleacc\ObjectFromLresult", "ptr",lResult, "ptr",&GUID, "ptr",0, "ptr*",pdoc)
+         return ComObj(9,ComObjQuery(pdoc,IID,IID),1), ObjRelease(pdoc)
+      }
+   }
+}
+
+Gdip_Startup()
+{
+Ptr := A_PtrSize ? "UPtr" : "UInt"
+if !DllCall("GetModuleHandle", "str", "gdiplus", Ptr)
+DllCall("LoadLibrary", "str", "gdiplus")
+VarSetCapacity(si, A_PtrSize = 8 ? 24 : 16, 0), si := Chr(1)
+DllCall("gdiplus\GdiplusStartup", A_PtrSize ? "UPtr*" : "uint*", pToken, Ptr, &si, Ptr, 0)
+return pToken
+}
+
+Gdip_BitmapFromScreen(Screen=0, Raster="")
+{
+if (Screen = 0)
+{
+Sysget, x, 76
+Sysget, y, 77
+Sysget, w, 78
+Sysget, h, 79
+}
+else if (SubStr(Screen, 1, 5) = "hwnd:")
+{
+Screen := SubStr(Screen, 6)
+if !WinExist( "ahk_id " Screen)
+return -2
+WinGetPos,,, w, h, ahk_id %Screen%
+x := y := 0
+hhdc := GetDCEx(Screen, 3)
+}
+else if (Screen&1 != "")
+{
+Sysget, M, Monitor, %Screen%
+x := MLeft, y := MTop, w := MRight-MLeft, h := MBottom-MTop
+}
+else
+{
+StringSplit, S, Screen, |
+x := S1, y := S2, w := S3, h := S4
+}
+if (x = "") || (y = "") || (w = "") || (h = "")
+return -1
+chdc := CreateCompatibleDC(), hbm := CreateDIBSection(w, h, chdc), obm := SelectObject(chdc, hbm), hhdc := hhdc ? hhdc : GetDC()
+BitBlt(chdc, 0, 0, w, h, hhdc, x, y, Raster)
+ReleaseDC(hhdc)
+pBitmap := Gdip_CreateBitmapFromHBITMAP(hbm)
+SelectObject(chdc, obm), DeleteObject(hbm), DeleteDC(hhdc), DeleteDC(chdc)
+return pBitmap
+}
+
+Gdip_SaveBitmapToFile(pBitmap, sOutput, Quality=75)
+{
+Ptr := A_PtrSize ? "UPtr" : "UInt"
+SplitPath, sOutput,,, Extension
+if Extension not in BMP,DIB,RLE,JPG,JPEG,JPE,JFIF,GIF,TIF,TIFF,PNG
+return -1
+Extension := "." Extension
+DllCall("gdiplus\GdipGetImageEncodersSize", "uint*", nCount, "uint*", nSize)
+VarSetCapacity(ci, nSize)
+DllCall("gdiplus\GdipGetImageEncoders", "uint", nCount, "uint", nSize, Ptr, &ci)
+if !(nCount && nSize)
+return -2
+If (A_IsUnicode){
+StrGet_Name := "StrGet"
+Loop, %nCount%
+{
+sString := %StrGet_Name%(NumGet(ci, (idx := (48+7*A_PtrSize)*(A_Index-1))+32+3*A_PtrSize), "UTF-16")
+if !InStr(sString, "*" Extension)
+continue
+pCodec := &ci+idx
+break
+}
+} else {
+Loop, %nCount%
+{
+Location := NumGet(ci, 76*(A_Index-1)+44)
+nSize := DllCall("WideCharToMultiByte", "uint", 0, "uint", 0, "uint", Location, "int", -1, "uint", 0, "int",  0, "uint", 0, "uint", 0)
+VarSetCapacity(sString, nSize)
+DllCall("WideCharToMultiByte", "uint", 0, "uint", 0, "uint", Location, "int", -1, "str", sString, "int", nSize, "uint", 0, "uint", 0)
+if !InStr(sString, "*" Extension)
+continue
+pCodec := &ci+76*(A_Index-1)
+break
+}
+}
+if !pCodec
+return -3
+if (Quality != 75)
+{
+Quality := (Quality < 0) ? 0 : (Quality > 100) ? 100 : Quality
+if Extension in .JPG,.JPEG,.JPE,.JFIF
+{
+DllCall("gdiplus\GdipGetEncoderParameterListSize", Ptr, pBitmap, Ptr, pCodec, "uint*", nSize)
+VarSetCapacity(EncoderParameters, nSize, 0)
+DllCall("gdiplus\GdipGetEncoderParameterList", Ptr, pBitmap, Ptr, pCodec, "uint", nSize, Ptr, &EncoderParameters)
+Loop, % NumGet(EncoderParameters, "UInt")
+{
+elem := (24+(A_PtrSize ? A_PtrSize : 4))*(A_Index-1) + 4 + (pad := A_PtrSize = 8 ? 4 : 0)
+if (NumGet(EncoderParameters, elem+16, "UInt") = 1) && (NumGet(EncoderParameters, elem+20, "UInt") = 6)
+{
+p := elem+&EncoderParameters-pad-4
+NumPut(Quality, NumGet(NumPut(4, NumPut(1, p+0)+20, "UInt")), "UInt")
+break
+}
+}
+}
+}
+if (!A_IsUnicode)
+{
+nSize := DllCall("MultiByteToWideChar", "uint", 0, "uint", 0, Ptr, &sOutput, "int", -1, Ptr, 0, "int", 0)
+VarSetCapacity(wOutput, nSize*2)
+DllCall("MultiByteToWideChar", "uint", 0, "uint", 0, Ptr, &sOutput, "int", -1, Ptr, &wOutput, "int", nSize)
+VarSetCapacity(wOutput, -1)
+if !VarSetCapacity(wOutput)
+return -4
+E := DllCall("gdiplus\GdipSaveImageToFile", Ptr, pBitmap, Ptr, &wOutput, Ptr, pCodec, "uint", p ? p : 0)
+}
+else
+E := DllCall("gdiplus\GdipSaveImageToFile", Ptr, pBitmap, Ptr, &sOutput, Ptr, pCodec, "uint", p ? p : 0)
+return E ? -5 : 0
+}
+Gdip_Shutdown(pToken)
+{
+Ptr := A_PtrSize ? "UPtr" : "UInt"
+DllCall("gdiplus\GdiplusShutdown", Ptr, pToken)
+if hModule := DllCall("GetModuleHandle", "str", "gdiplus", Ptr)
+DllCall("FreeLibrary", Ptr, hModule)
+return 0
+}
+Gdip_RotateWorldTransform(pGraphics, Angle, MatrixOrder=0)
+{
+return DllCall("gdiplus\GdipRotateWorldTransform", A_PtrSize ? "UPtr" : "UInt", pGraphics, "float", Angle, "int", MatrixOrder)
+}
+GetDCEx(hwnd, flags=0, hrgnClip=0)
+{
+Ptr := A_PtrSize ? "UPtr" : "UInt"
+return DllCall("GetDCEx", Ptr, hwnd, Ptr, hrgnClip, "int", flags)
+}
+CreateCompatibleDC(hdc=0)
+{
+return DllCall("CreateCompatibleDC", A_PtrSize ? "UPtr" : "UInt", hdc)
+}
+CreateDIBSection(w, h, hdc="", bpp=32, ByRef ppvBits=0)
+{
+Ptr := A_PtrSize ? "UPtr" : "UInt"
+hdc2 := hdc ? hdc : GetDC()
+VarSetCapacity(bi, 40, 0)
+NumPut(w, bi, 4, "uint")
+, NumPut(h, bi, 8, "uint")
+, NumPut(40, bi, 0, "uint")
+, NumPut(1, bi, 12, "ushort")
+, NumPut(0, bi, 16, "uInt")
+, NumPut(bpp, bi, 14, "ushort")
+hbm := DllCall("CreateDIBSection"
+, Ptr, hdc2
+, Ptr, &bi
+, "uint", 0
+, A_PtrSize ? "UPtr*" : "uint*", ppvBits
+, Ptr, 0
+, "uint", 0, Ptr)
+if !hdc
+ReleaseDC(hdc2)
+return hbm
+}
+SelectObject(hdc, hgdiobj)
+{
+Ptr := A_PtrSize ? "UPtr" : "UInt"
+return DllCall("SelectObject", Ptr, hdc, Ptr, hgdiobj)
+}
+GetDC(hwnd=0)
+{
+return DllCall("GetDC", A_PtrSize ? "UPtr" : "UInt", hwnd)
+}
+BitBlt(ddc, dx, dy, dw, dh, sdc, sx, sy, Raster="")
+{
+Ptr := A_PtrSize ? "UPtr" : "UInt"
+return DllCall("gdi32\BitBlt"
+, Ptr, dDC
+, "int", dx
+, "int", dy
+, "int", dw
+, "int", dh
+, Ptr, sDC
+, "int", sx
+, "int", sy
+, "uint", Raster ? Raster : 0x00CC0020)
+}
+ReleaseDC(hdc, hwnd=0)
+{
+Ptr := A_PtrSize ? "UPtr" : "UInt"
+return DllCall("ReleaseDC", Ptr, hwnd, Ptr, hdc)
+}
+Gdip_CreateBitmapFromHBITMAP(hBitmap, Palette=0)
+{
+Ptr := A_PtrSize ? "UPtr" : "UInt"
+DllCall("gdiplus\GdipCreateBitmapFromHBITMAP", Ptr, hBitmap, Ptr, Palette, A_PtrSize ? "UPtr*" : "uint*", pBitmap)
+return pBitmap
+}
+DeleteObject(hObject)
+{
+return DllCall("DeleteObject", A_PtrSize ? "UPtr" : "UInt", hObject)
+}
+DeleteDC(hdc)
+{
+return DllCall("DeleteDC", A_PtrSize ? "UPtr" : "UInt", hdc)
+}
+LogToFile(TextToLog)
+{		
+	FormatTime, TimeString,, yyyyMMdd
+	fileName :=  TimeString . ".txt"
+    FileAppend, %TextToLog%`n, %fileName%
+}
