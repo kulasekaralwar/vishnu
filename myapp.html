@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html ng-app="MyApp" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+</head>
+<body>
+    <div ng-controller="employeesController">
+        <!--<table class="table table-striped">
+            <tr>
+                <td>Eid</td>
+                <td>EmpName</td>
+                <td>Delete</td>
+            </tr>
+            <tr dir-paginate="emp in Emps | itemsPerPage:5">
+                <td><a ng-click="GetByEid(emp.Eid)" href="#">{{emp.Eid}}</a></td>
+                <td>{{emp.EName}}</td>
+                <td><a ng-click="DeleteByEid(emp.Eid)" href="#"> Delete</a></td>
+            </tr>
+        </table>
+        <dir-pagination-controls max-size="3"
+                                 direction-links="true"
+                                 boundary-links="true">
+        </dir-pagination-controls>-->
+
+        <form name="myform" novalidate>
+            <table class=" table table-bordered" width="50%">
+                <tr>
+                    <td>Eid:</td>
+                    <td>
+                        <input type="text" ng-model="Emp.Eid" name="Eid" required/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>EName:</td>
+                    <td>
+                        <input type="text" ng-model="Emp.EName" name="EName" required/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>ESalary:</td>
+                    <td>
+                        <input type="number" ng-model="Emp.ESalary" name="ESalary" />
+                     </td>
+                </tr>
+                <tr>
+                    <td>EGender:</td>
+                    <td>
+                        <input type="radio" value="M" ng-model="Emp.EGender" name="EGender" required/> Male
+                        <input type="radio" value="F" ng-model="Emp.EGender" name="EGender" required/> Female
+                        
+                    </td>
+                </tr>
+                <tr>
+                    <td>EDOB:</td>
+                    <td>
+                       <input type="date" value=" " ng-model="Emp.EDOB" name="EDOB" required/>
+                       
+                    </td>
+                </tr>
+                <tr>
+                    <td>Did:</td>
+                    <td>
+                        <input type="text" value=" " ng-model="Emp.Did" name="Did" />
+                    </td>
+                </tr>
+                <tr>
+                    <td><input type="submit" ng-click="CreateEmployee(Emp,myform.$valid)" value="Create" /></td>
+                    <td><input type="submit" ng-click="UpdateEmployee(Emp)" value="Update" /></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        {{Msg}}
+                        <ul>
+                            <li ng-if="myform.$submitted && myform.Eid.$invalid">Eid is required</li>
+                            <li ng-if="myform.$submitted && myform.EName.$invalid">EName is required</li>
+                            <li ng-if="myform.$submitted && myform.EGender.$error.required">Egender is required</li>
+                            <li ng-if="myform.$submitted && myform.EDOB.$error.required">EDOB is required</li>                            
+                        </ul>
+                        <ul ng-repeat="r in errorMsgs">
+                            <li>{{r}}</li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</body>
+</html>
+<script src="Scripts/angular.min.js"></script>
+<script src="myapp.js"></script>
+<script src="Scripts/bootstrap.min.js"></script>
+<link href="Content/bootstrap.min.css" rel="stylesheet" />
+<script src="Scripts/dirPagination.js"></script>
