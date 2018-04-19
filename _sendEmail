@@ -1,0 +1,72 @@
+gosub SUBMIT_EMAIL
+return
+
+SUBMIT_EMAIL:
+{
+TrayTip
+CdoReferenceTypeName           := 1
+pmsg                           := ComObjCreate("CDO.Message")
+pmsg.MimeFormatted             := True
+pmsg.From                      := "c.kulasekaralwar@sutherlandglobal.com"
+pmsg.To 					   := "veeramuthu.k@sutherlandglobal.com"
+pmsg.CC 					   := "srikanth.a@sutherlandglobal.com;c.kulasekaralwar@sutherlandglobal.com"
+
+
+zfSubmittedFile				   := "\\bbyairfnp03\Fares distribution\Knowledge_Sharing\Zero_Fare_Checks_Robotics\Archive\ZF-WY-18-01-15-01-41.png"
+
+pmsg.Subject                   := "Zero Fares Submitted List"
+pmsg.HTMLBody                  := "<html><p>Hi All,</p><p>Please find below snapshots for zero fares checks.</p><img src=""cid:embed.png""><p>Regards, - FDS TEAM</p></html>"
+objBP                          := pmsg.AddRelatedBodyPart( zfSubmittedFile , "embed.png" , CdoReferenceTypeName )
+objBP.Fields.Item("urn:schemas:mailheader:Content-ID") := "<embed.png>"
+objBP.Fields.Update
+sAttach                        := "\\bbyairfnp03\Fares distribution\Knowledge_Sharing\Zero_Fare_Checks_Robotics\ZF-ME-18-04-17-01-40.png"
+fields := Object()
+fields.smtpserver              := "chnvelmsg10"
+fields.smtpserverport          := 25
+fields.smtpusessl              := false
+fields.sendusing               := 2
+fields.smtpauthenticate        := 1
+fields.sendusername            := "c.kulasekaralwar@sutherlandglobal.com"
+;~ fields.sendpassword            := "testing"
+fields.smtpconnectiontimeout   := 60
+schema                         := "http://schemas.microsoft.com/cdo/configuration/"
+pfld                           := pmsg.Configuration.Fields
+For field , value in fields
+pfld.Item( schema . field )  := value
+pfld.Update()
+pmsg.Send()
+TrayTip   , Fares , Email Sent , , 17
+Sleep 2400
+return
+}
+
+
+
+CdoReferenceTypeName := 1
+pmsg := ComObjCreate("CDO.Message")
+pmsg.From := "Robotic@sutherlandglobal.com"
+;~ pmsg.ReplyTo := "c.kulasekaralwar@sutherlandglobal.com"
+pmsg.To := "srikanth.a@sutherlandglobal.com;Sachin.Naik@SUTHERLANDGLOBAL.COM;RoboticsProcessAdmin@sutherlandglobal.com;rajkumar.purushothman@sutherlandglobal.com"
+;~ pmsg.BCC := "c.kulasekaralwar@sutherlandglobal.com"
+pmsg.CC := "c.kulasekaralwar@sutherlandglobal.com;Nikhil.Kotian@sutherlandglobal.com"
+
+pmsg.Subject := "ZERO Fares Check Submitted List"
+pmsg.HTMLBody := "<html><p>Please refer below folder for 'Zero Fares Check' snapshot of Tomorrow. '\\bbyairfnp03\Fares distribution\Knowledge_Sharing\Zero_Fare_Checks_Robotics'</p><p>Please do not reply to this automated email.</p><p> © 2017. All Rights Reserved. Sutherland Global Services</p></html>"
+;~ objBP := pmsg.AddRelatedBodyPart(zfSubmittedFile, "embed.png",CdoReferenceTypeName)
+;~ objBP := pmsg.AddRelatedBodyPart("D:\Kulasekaralwar\veera\ATPCO Tool\img\zerofares\ZF-WY-18-02-15-07-08.png", "embed.png", CdoReferenceTypeName)
+objBP.Fields.Item("urn:schemas:mailheader:Content-ID") := "<embed.png>"
+objBP.Fields.Update
+fields := Object()
+fields.smtpserver := "mail01.corp.suth.com"
+fields.smtpserverport := 25
+fields.smtpusessl := false 
+fields.sendusing := 2
+fields.smtpauthenticate := 1
+fields.smtpconnectiontimeout := 60
+schema := "http://schemas.microsoft.com/cdo/configuration/"
+pfld := pmsg.Configuration.Fields
+For field,value in fields
+pfld.Item(schema . field) := value
+pfld.Update()
+pmsg.Send()
+return
